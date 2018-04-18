@@ -48,7 +48,7 @@ func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntry, code fuse.Status) {
 	var ret []fuse.DirEntry
 
-	// top-level
+ 	// top-level
 	if name == "" {
 		known, err := GetHosts()
 		if err != nil {
@@ -72,6 +72,7 @@ func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntr
 // Open a file.
 func (me *KnownFS) Open(name string, flags uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
 
+	// No writing is permitted
 	if flags&fuse.O_ANYWRITE != 0 {
 		return nil, fuse.EPERM
 	}
@@ -81,24 +82,27 @@ func (me *KnownFS) Open(name string, flags uint32, context *fuse.Context) (file 
 		fmt.Printf("Error calling GetHosts")
 		return nil, fuse.ENOENT
 	}
+
+	// Did we find the host?
 	for host, key := range known {
 		if name == host+"/fingerprint" {
-			return nodefs.NewDataFile([]byte(key)), fuse.OK
+			return nodefs.NewDataFile([]byte(key + "\n")), fuse.OK
 		}
 	}
 
+	// Otherwise no entry.
 	return nil, fuse.ENOENT
 }
 
 func main() {
 	flag.Parse()
 	if len(flag.Args()) < 1 {
-		log.Fatal("Usage:\n  hello MOUNTPOINT")
+		log.Fatal("Usage:\n knownfs MOUNTPOINT")
 	}
 	nfs := pathfs.NewPathNodeFs(&KnownFS{FileSystem: pathfs.NewDefaultFileSystem()}, nil)
 	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil)
 	if err != nil {
-		log.Fatalf("Mount fail: %v\n", err)
+		log.Fatalf("Mount failed: %v\n", err)
 	}
 	server.Serve()
 }

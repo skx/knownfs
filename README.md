@@ -8,13 +8,15 @@ For every hostname listed in your known_hosts file this filesystem will create a
 
 # Installation
 
-     $ go get github.com/hanwen/go-fuse/...
      $ go get -u github.com/skx/knownfs
      $ go install github.com/skx/knownfs
 
+Now you should discover you have a binary installed at `$GOPATH/bin/knownfs`.
+
+
 # Usage:
 
-Mount it:
+Make a directory for the filesystem, and mount it like so:
 
      $ mkdir ~/knownfs/
      $ knownfs ~/knownfs/
