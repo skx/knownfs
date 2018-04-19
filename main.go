@@ -18,7 +18,9 @@ import (
 	"github.com/skx/knownfs/hostsreader"
 )
 
-// Our structure
+// KnownFS is our structure.  It holds pointers to the implementation
+// of a path-based filesystem and the helper for reading the known_hosts
+// file.
 type KnownFS struct {
 	// The filesystem
 	pathfs.FileSystem
@@ -83,12 +85,11 @@ func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntr
 			ret = append(ret, fuse.DirEntry{Name: host, Mode: fuse.S_IFDIR})
 		}
 		return ret, fuse.OK
-	} else {
-
-		// We assume we've opened a host.
-		ret = append(ret, fuse.DirEntry{Name: "fingerprint", Mode: fuse.S_IFREG})
-		return ret, fuse.OK
 	}
+
+	// We assume we've opened a host.
+	ret = append(ret, fuse.DirEntry{Name: "fingerprint", Mode: fuse.S_IFREG})
+	return ret, fuse.OK
 }
 
 // Open opens a file for reading/writing.

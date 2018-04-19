@@ -32,14 +32,14 @@ func New() *HostReader {
 //
 // It allows us to avoid reparsing the file if the contents haven't
 // changed.
-func (self *HostReader) HasChanged() (bool, error) {
+func (me *HostReader) HasChanged() (bool, error) {
 	file := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
 	data, err := os.Stat(file)
 	if err != nil {
 		return false, err
 	}
 
-	if data.ModTime().After(self.time) {
+	if data.ModTime().After(me.time) {
 		return true, nil
 	}
 	return false, nil
@@ -49,31 +49,31 @@ func (self *HostReader) HasChanged() (bool, error) {
 //
 // It caches accesses to the file via the `HasChanged` method to
 // speed things up.
-func (self *HostReader) Hosts() (map[string]string, error) {
+func (me *HostReader) Hosts() (map[string]string, error) {
 
 	// Has the file changed recently?
-	changed, err := self.HasChanged()
+	changed, err := me.HasChanged()
 	if err != nil {
-		return self.entries, err
+		return me.entries, err
 	}
 
 	// If not then we can return the entries - providing
 	// we've parsed at least once recently.
-	if changed == false && len(self.entries) > 0 {
-		return self.entries, nil
+	if changed == false && len(me.entries) > 0 {
+		return me.entries, nil
 	}
 
 	// Here we might have been called because this is
 	// our first invocation, or because the file has
 	// changed.
 	// Clear old entries in case of the latter.
-	for k := range self.entries {
-		delete(self.entries, k)
+	for k := range me.entries {
+		delete(me.entries, k)
 	}
 
 	file, err := os.Open(filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts"))
 	if err != nil {
-		return self.entries, err
+		return me.entries, err
 	}
 	defer file.Close()
 
@@ -88,15 +88,15 @@ func (self *HostReader) Hosts() (map[string]string, error) {
 		// key, comment, hosts, ?? , err
 		key, _, hosts, _, err := ssh.ParseAuthorizedKey(scanner.Bytes())
 		if err != nil {
-			return self.entries, err
+			return me.entries, err
 		} else {
 			for _, i := range hosts {
 				host, _, _ := net.SplitHostPort(i)
-				self.entries[host] = ssh.FingerprintLegacyMD5(key)
+				me.entries[host] = ssh.FingerprintLegacyMD5(key)
 			}
 		}
 	}
 
-	self.time = time.Now()
-	return self.entries, nil
+	me.time = time.Now()
+	return me.entries, nil
 }
