@@ -8,17 +8,19 @@ import (
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
+	"github.com/skx/knownfs/hostsreader"
 )
 
 type KnownFS struct {
 	pathfs.FileSystem
+	helper *hostsreader.HostReader
 }
 
 // Get attributes of the named file/directory
 func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 
 	// Get entries.
-	known, err := GetHosts()
+	known, err := me.helper.Hosts()
 
 	if err != nil {
 		fmt.Printf("Error calling GetHosts")
@@ -48,9 +50,9 @@ func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntry, code fuse.Status) {
 	var ret []fuse.DirEntry
 
- 	// top-level
+	// top-level
 	if name == "" {
-		known, err := GetHosts()
+		known, err := me.helper.Hosts()
 		if err != nil {
 			fmt.Printf("Error calling GetHosts")
 			return nil, fuse.ENOENT
@@ -77,7 +79,7 @@ func (me *KnownFS) Open(name string, flags uint32, context *fuse.Context) (file 
 		return nil, fuse.EPERM
 	}
 
-	known, err := GetHosts()
+	known, err := me.helper.Hosts()
 	if err != nil {
 		fmt.Printf("Error calling GetHosts")
 		return nil, fuse.ENOENT
@@ -99,7 +101,7 @@ func main() {
 	if len(flag.Args()) < 1 {
 		log.Fatal("Usage:\n knownfs MOUNTPOINT")
 	}
-	nfs := pathfs.NewPathNodeFs(&KnownFS{FileSystem: pathfs.NewDefaultFileSystem()}, nil)
+	nfs := pathfs.NewPathNodeFs(&KnownFS{FileSystem: pathfs.NewDefaultFileSystem(), helper: hostsreader.New()}, nil)
 	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil)
 	if err != nil {
 		log.Fatalf("Mount failed: %v\n", err)

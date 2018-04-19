@@ -1,0 +1,95 @@
+package hostsreader
+
+import (
+	"bufio"
+	"net"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"golang.org/x/crypto/ssh"
+)
+
+// Ourserlf
+type HostReader struct {
+	// modification time of our file.
+	time time.Time
+
+	// the map of known-hosts and their fingerprints
+	entries map[string]string
+}
+
+// Constructor
+func New() *HostReader {
+	self := new(HostReader)
+	self.entries = make(map[string]string)
+	return self
+}
+
+// Return the entries
+func (self *HostReader) HasChanged() (bool, error) {
+	file := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
+	data, err := os.Stat(file)
+	if err != nil {
+		return false, err
+	}
+
+	if data.ModTime().After(self.time) {
+		return true, nil
+	}
+	return false, nil
+}
+
+// Read the entries from the file, caching if we can.
+func (self *HostReader) Hosts() (map[string]string, error) {
+
+	// Has the file changed recently?
+	changed, err := self.HasChanged()
+	if err != nil {
+		return self.entries, err
+	}
+
+	// If not then we can return the entries - providing
+	// we've parsed at least once recently.
+	if changed == false && len(self.entries) > 0 {
+		return self.entries, nil
+	}
+
+	// Here we might have been called because this is
+	// our first invocation, or because the file has
+	// changed.
+	// Clear old entries in case of the latter.
+	for k := range self.entries {
+		delete(self.entries, k)
+	}
+
+	file, err := os.Open(filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts"))
+	if err != nil {
+		return self.entries, err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		fields := strings.Split(scanner.Text(), " ")
+		if len(fields) != 3 {
+			continue
+		}
+
+		// key, comment, hosts, ?? , err
+		key, _, hosts, _, err := ssh.ParseAuthorizedKey(scanner.Bytes())
+		if err != nil {
+			return self.entries, err
+		} else {
+			for _, i := range hosts {
+				host, _, _ := net.SplitHostPort(i)
+				self.entries[host] = ssh.FingerprintLegacyMD5(key)
+			}
+		}
+	}
+
+	self.time = time.Now()
+	return self.entries, nil
+}
