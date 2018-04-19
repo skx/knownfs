@@ -11,23 +11,27 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// Ourserlf
+// HostReader is the structure for our object.
 type HostReader struct {
-	// modification time of our file.
+	// time holds the modification time of ~/.ssh/known_hosts
 	time time.Time
 
 	// the map of known-hosts and their fingerprints
 	entries map[string]string
 }
 
-// Constructor
+// New is our constructor.
 func New() *HostReader {
 	self := new(HostReader)
 	self.entries = make(map[string]string)
 	return self
 }
 
-// Return the entries
+// HasChanged returns true if the given file has changed since our
+// last read - using the mtime of the file to decide.
+//
+// It allows us to avoid reparsing the file if the contents haven't
+// changed.
 func (self *HostReader) HasChanged() (bool, error) {
 	file := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
 	data, err := os.Stat(file)
@@ -41,7 +45,10 @@ func (self *HostReader) HasChanged() (bool, error) {
 	return false, nil
 }
 
-// Read the entries from the file, caching if we can.
+// Hosts returns the map of known-hosts and their associated keys
+//
+// It caches accesses to the file via the `HasChanged` method to
+// speed things up.
 func (self *HostReader) Hosts() (map[string]string, error) {
 
 	// Has the file changed recently?
