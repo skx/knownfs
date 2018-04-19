@@ -11,6 +11,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
@@ -53,7 +55,7 @@ func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	}
 
 	// Directory entry for a host?
-	if name== "" || known[name] != "" {
+	if name == "" || known[name] != "" {
 		return &fuse.Attr{
 			Mode: fuse.S_IFDIR | 0755,
 		}, fuse.OK
@@ -119,14 +121,25 @@ func (me *KnownFS) Open(name string, flags uint32, context *fuse.Context) (file 
 
 // Entry point.
 func main() {
+
+	// Parse flags (none)
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		log.Fatal("Usage:\n knownfs MOUNTPOINT")
 	}
-	nfs := pathfs.NewPathNodeFs(&KnownFS{FileSystem: pathfs.NewDefaultFileSystem(), helper: hostsreader.New()}, nil)
+
+	// The file we'll parse
+	file := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
+
+	// Create the helper
+	nfs := pathfs.NewPathNodeFs(&KnownFS{FileSystem: pathfs.NewDefaultFileSystem(), helper: hostsreader.New(file)}, nil)
+
+	// Mount
 	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil)
 	if err != nil {
 		log.Fatalf("Mount failed: %v\n", err)
 	}
+
+	// Serve
 	server.Serve()
 }

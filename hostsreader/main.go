@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"net"
 	"os"
-	"path/filepath"
+
 	"strings"
 	"time"
 
@@ -13,6 +13,9 @@ import (
 
 // HostReader is the structure for our object.
 type HostReader struct {
+	// The file we're created with
+	filename string
+
 	// time holds the modification time of ~/.ssh/known_hosts
 	time time.Time
 
@@ -21,8 +24,9 @@ type HostReader struct {
 }
 
 // New is our constructor.
-func New() *HostReader {
+func New(filename string) *HostReader {
 	self := new(HostReader)
+	self.filename = filename
 	self.entries = make(map[string]string)
 	return self
 }
@@ -33,8 +37,7 @@ func New() *HostReader {
 // It allows us to avoid reparsing the file if the contents haven't
 // changed.
 func (me *HostReader) HasChanged() (bool, error) {
-	file := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
-	data, err := os.Stat(file)
+	data, err := os.Stat(me.filename)
 	if err != nil {
 		return false, err
 	}
@@ -71,7 +74,7 @@ func (me *HostReader) Hosts() (map[string]string, error) {
 		delete(me.entries, k)
 	}
 
-	file, err := os.Open(filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts"))
+	file, err := os.Open(me.filename)
 	if err != nil {
 		return me.entries, err
 	}
@@ -98,7 +101,7 @@ func (me *HostReader) Hosts() (map[string]string, error) {
 			host := i
 
 			// Split off the port if we need to
-			if strings.Contains( i, ":" ) {
+			if strings.Contains(i, ":") {
 				host, _, _ = net.SplitHostPort(i)
 
 				me.entries[host] = ssh.FingerprintLegacyMD5(key)
