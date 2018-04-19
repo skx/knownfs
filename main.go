@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -30,6 +31,9 @@ type KnownFS struct {
 	// The helper for reading the keys
 	helper *hostsreader.HostReader
 }
+
+// This flag excludes entries which are IP-addresses
+var excludeIPs bool
 
 // GetAttr reads the attributes of the given file.
 //
@@ -84,7 +88,14 @@ func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntr
 		}
 
 		for host := range known {
-			ret = append(ret, fuse.DirEntry{Name: host, Mode: fuse.S_IFDIR})
+			if excludeIPs {
+
+				if net.ParseIP(host) == nil {
+					ret = append(ret, fuse.DirEntry{Name: host, Mode: fuse.S_IFDIR})
+				}
+			} else {
+				ret = append(ret, fuse.DirEntry{Name: host, Mode: fuse.S_IFDIR})
+			}
 		}
 		return ret, fuse.OK
 	}
@@ -127,10 +138,13 @@ func main() {
 		filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts"),
 		"The SSH known_hosts file to parse")
 
+	// Should we exclude IP-based hosts?
+	flag.BoolVar(&excludeIPs, "hosts-only", false, "Exclude IP-address entries")
+
 	// Parse flags (none)
 	flag.Parse()
 	if len(flag.Args()) < 1 {
-		log.Fatal("Usage:\n knownfs MOUNTPOINT")
+		log.Fatal("Usage:\n knownfs [-config $HOME/.ssh/known_hosts] [-hosts-only] MOUNTPOINT")
 	}
 
 	// If the file doesn't exist we're screwed :)
