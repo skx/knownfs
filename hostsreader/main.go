@@ -89,11 +89,12 @@ func (me *HostReader) Hosts() (map[string]string, error) {
 		key, _, hosts, _, err := ssh.ParseAuthorizedKey(scanner.Bytes())
 		if err != nil {
 			return me.entries, err
-		} else {
-			for _, i := range hosts {
-				host, _, _ := net.SplitHostPort(i)
-				me.entries[host] = ssh.FingerprintLegacyMD5(key)
-			}
+		}
+
+		// For each host record the key against it
+		for _, i := range hosts {
+			host, _, _ := net.SplitHostPort(i)
+			me.entries[host] = ssh.FingerprintLegacyMD5(key)
 		}
 	}
 
