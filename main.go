@@ -40,7 +40,7 @@ func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	known, err := me.helper.Hosts()
 
 	if err != nil {
-		fmt.Printf("Error calling GetHosts")
+		fmt.Printf("Error calling Hosts(): %s", err.Error())
 		return nil, fuse.ENOENT
 	}
 
@@ -79,7 +79,7 @@ func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntr
 	if name == "" {
 		known, err := me.helper.Hosts()
 		if err != nil {
-			fmt.Printf("Error calling GetHosts")
+			fmt.Printf("Error calling Hosts(): %s", err.Error())
 			return nil, fuse.ENOENT
 		}
 
@@ -130,6 +130,13 @@ func main() {
 
 	// The file we'll parse
 	file := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
+
+	// If the file doesn't exist we're screwed :)
+	_, err := os.Stat(file)
+	if err != nil {
+		fmt.Printf("Failed to stat(%s) - %s\n", file, err.Error())
+		os.Exit(1)
+	}
 
 	// Create the helper
 	nfs := pathfs.NewPathNodeFs(&KnownFS{FileSystem: pathfs.NewDefaultFileSystem(), helper: hostsreader.New(file)}, nil)
