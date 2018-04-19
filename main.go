@@ -122,24 +122,26 @@ func (me *KnownFS) Open(name string, flags uint32, context *fuse.Context) (file 
 // Entry point.
 func main() {
 
+	// The SSH file we're going to read
+	var file = flag.String("config",
+		filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts"),
+		"The SSH known_hosts file to parse")
+
 	// Parse flags (none)
 	flag.Parse()
 	if len(flag.Args()) < 1 {
 		log.Fatal("Usage:\n knownfs MOUNTPOINT")
 	}
 
-	// The file we'll parse
-	file := filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
-
 	// If the file doesn't exist we're screwed :)
-	_, err := os.Stat(file)
+	_, err := os.Stat(*file)
 	if err != nil {
 		fmt.Printf("Failed to stat(%s) - %s\n", file, err.Error())
 		os.Exit(1)
 	}
 
 	// Create the helper
-	nfs := pathfs.NewPathNodeFs(&KnownFS{FileSystem: pathfs.NewDefaultFileSystem(), helper: hostsreader.New(file)}, nil)
+	nfs := pathfs.NewPathNodeFs(&KnownFS{FileSystem: pathfs.NewDefaultFileSystem(), helper: hostsreader.New(*file)}, nil)
 
 	// Mount
 	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil)
