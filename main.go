@@ -42,13 +42,6 @@ func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 		return nil, fuse.ENOENT
 	}
 
-	// Directory entry for a host?
-	if known[name] != "" {
-		return &fuse.Attr{
-			Mode: fuse.S_IFDIR | 0755,
-		}, fuse.OK
-	}
-
 	// Otherwise if the entry is a hosts' fingerprint file then
 	// return that it is a file & the correct size.
 	for host, key := range known {
@@ -57,6 +50,13 @@ func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 				Mode: fuse.S_IFREG | 0644, Size: uint64(len(key)),
 			}, fuse.OK
 		}
+	}
+
+	// Directory entry for a host?
+	if name== "" || known[name] != "" {
+		return &fuse.Attr{
+			Mode: fuse.S_IFDIR | 0755,
+		}, fuse.OK
 	}
 
 	// Missing-file
