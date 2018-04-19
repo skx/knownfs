@@ -1,3 +1,10 @@
+// This is the implementation of a simple FUSE-based filesystem.
+//
+// The contents of the filesystem will include one sub-directory
+// for every host which is stored in your ~/.ssh/known_hosts file.
+//
+// Each directory will contain a further entry for the SSH fingerprint.
+//
 package main
 
 import (
@@ -11,12 +18,18 @@ import (
 	"github.com/skx/knownfs/hostsreader"
 )
 
+// Our structure
 type KnownFS struct {
+	// The filesystem
 	pathfs.FileSystem
+
+	// The helper for reading the keys
 	helper *hostsreader.HostReader
 }
 
-// Get attributes of the named file/directory
+// GetAttr reads the attributes of the given file.
+//
+// Think of it as the implementation of stat() for the filesystem.
 func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 
 	// Get entries.
@@ -27,13 +40,15 @@ func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 		return nil, fuse.ENOENT
 	}
 
-	// Directory entry for a host.
+	// Directory entry for a host?
 	if known[name] != "" {
 		return &fuse.Attr{
 			Mode: fuse.S_IFDIR | 0755,
 		}, fuse.OK
 	}
 
+	// Otherwise if the entry is a hosts' fingerprint file then
+	// return that it is a file & the correct size.
 	for host, key := range known {
 		if name == host+"/fingerprint" {
 			return &fuse.Attr{
@@ -42,11 +57,17 @@ func (me *KnownFS) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 		}
 	}
 
+	// Missing-file
 	fmt.Printf("GetAttr(%s)\n", name)
 	return nil, fuse.ENOENT
 }
 
-// Open a directory (i.e. read the contents).
+// OpenDir is called when a directory is opened, and should return the
+// contents of that directory.
+//
+// We handle two cases: opening our mount-point, which involves creating
+// one subdirectory for each host, and opening one of the per-host files
+// which just involves creating a single fingerprint file.
 func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntry, code fuse.Status) {
 	var ret []fuse.DirEntry
 
@@ -58,7 +79,7 @@ func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntr
 			return nil, fuse.ENOENT
 		}
 
-		for host, _ := range known {
+		for host := range known {
 			ret = append(ret, fuse.DirEntry{Name: host, Mode: fuse.S_IFDIR})
 		}
 		return ret, fuse.OK
@@ -68,10 +89,9 @@ func (me *KnownFS) OpenDir(name string, context *fuse.Context) (c []fuse.DirEntr
 		ret = append(ret, fuse.DirEntry{Name: "fingerprint", Mode: fuse.S_IFREG})
 		return ret, fuse.OK
 	}
-	return nil, fuse.ENOENT
 }
 
-// Open a file.
+// Open opens a file for reading/writing.
 func (me *KnownFS) Open(name string, flags uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
 
 	// No writing is permitted
@@ -96,6 +116,7 @@ func (me *KnownFS) Open(name string, flags uint32, context *fuse.Context) (file 
 	return nil, fuse.ENOENT
 }
 
+// Entry point.
 func main() {
 	flag.Parse()
 	if len(flag.Args()) < 1 {
