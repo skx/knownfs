@@ -150,7 +150,7 @@ func main() {
 	// If the file doesn't exist we're screwed :)
 	_, err := os.Stat(*file)
 	if err != nil {
-		fmt.Printf("Failed to stat(%s) - %s\n", file, err.Error())
+		fmt.Printf("Failed to stat(%s) - %s\n", *file, err.Error())
 		os.Exit(1)
 	}
 
