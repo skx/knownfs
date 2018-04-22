@@ -32,6 +32,15 @@ In another window:
 
 You should see a single subdirectory for each hostname listed in your `~/.ssh/known_hosts` file, and inside the directory you'll find a file named `fingerprint` with the hosts' fingerprint.
 
+Once you're done you will need to unmount the mount-point.  If you have `fusermount` installed you can do so like this:
+
+      $ fusermount -u ~/knownfs/
+
+If not you'll need root permissions to unmount the end-point:
+
+      $ sudo umount ~/knownfs/
+
+
 # Options
 
 By default you'll see entries for each host found, whether those entries are hostnames or IP addresses.  For example on my own system I see this:
