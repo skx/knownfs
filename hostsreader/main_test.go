@@ -30,8 +30,11 @@ func TestBasic(t *testing.T) {
 	// Create a helper
 	obj := New(file)
 
+	// Parsed results
+	var out map[string]string
+
 	// Parse the file initially
-	_, err := obj.Hosts()
+	out, err = obj.Hosts()
 	if err != nil {
 		t.Errorf("Error parsing (empty) file :%s", err.Error())
 	}
