@@ -74,7 +74,7 @@ func TestContent(t *testing.T) {
 	var out map[string]string
 
 	// Parse the file
-	out, err = obj.Hosts()
+	_, err = obj.Hosts()
 	if err != nil {
 		t.Errorf("Error parsing file :%s", err.Error())
 	}
