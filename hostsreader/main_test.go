@@ -70,8 +70,11 @@ func TestContent(t *testing.T) {
 	// Create a helper
 	obj := New(file)
 
+	// Parsed results
+	var out map[string]string
+
 	// Parse the file
-	out, err := obj.Hosts()
+	out, err = obj.Hosts()
 	if err != nil {
 		t.Errorf("Error parsing file :%s", err.Error())
 	}
