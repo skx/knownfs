@@ -104,8 +104,8 @@ func (me *HostReader) Hosts() (map[string]string, error) {
 			if strings.Contains(i, ":") {
 				host, _, _ = net.SplitHostPort(i)
 
-				me.entries[host] = ssh.FingerprintLegacyMD5(key)
 			}
+			me.entries[host] = ssh.FingerprintLegacyMD5(key)
 		}
 	}
 
