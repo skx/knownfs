@@ -1,4 +1,3 @@
-[![Travis CI](https://img.shields.io/travis/skx/knownfs/master.svg?style=flat-square)](https://travis-ci.org/skx/knownfs)
 [![Go Report Card](https://goreportcard.com/badge/github.com/skx/knownfs)](https://goreportcard.com/report/github.com/skx/knownfs)
 [![license](https://img.shields.io/github/license/skx/knownfs.svg)](https://github.com/skx/knownfs/blob/master/LICENSE)
 [![Release](https://img.shields.io/github/release/skx/knownfs.svg)](https://github.com/skx/knownfs/releases/latest)
@@ -66,6 +65,18 @@ That gives me just hostnames:
       builder.vpn
 
 You can also specify the path to an alternative `known_hosts` file, with `-config /path/to/file`.
+
+
+## Github Setup
+
+This repository is configured to run tests upon every commit, and when
+pull-requests are created/updated.  The testing is carried out via
+[.github/run-tests.sh](.github/run-tests.sh) which is used by the
+[github-action-tester](https://github.com/skx/github-action-tester) action.
+
+Releases are automated in a similar fashion via [.github/build](.github/build),
+and the [github-action-publish-binaries](https://github.com/skx/github-action-publish-binaries) action.
+
 
 Steve
 --
