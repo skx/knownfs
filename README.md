@@ -7,15 +7,29 @@
 
 A simple FUSE-based filesystem which exports the contents of `~/.ssh/known_hosts`.
 
-For every hostname listed in your known_hosts file this filesystem will create a directory, and that directory will contain a single file with the servers' fingerprint.
+For every hostname listed in your known_hosts file this filesystem will create a directory, and that directory will contain a single file holding the servers' SSH-fingerprint.
 
 
 # Installation
 
-     $ go get -u github.com/skx/knownfs
-     $ go install github.com/skx/knownfs
+There are two ways to install this project from source, which depend on the version of the [go](https://golang.org/) version you're using.
 
-Now you should discover you have a binary installed at `$GOPATH/bin/knownfs`.
+If you just need the binaries you can find them upon the [project release page](https://github.com/skx/knownfs/releases).
+
+
+## Source Installation go <=  1.11
+
+If you're using `go` before 1.11 then the following command should fetch/update `overseer`, and install it upon your system:
+
+     $ go get -u github.com/skx/knownfs
+
+## Source installation go  >= 1.12
+
+If you're using a more recent version of `go` (which is _highly_ recommended), you need to clone to a directory which is not present upon your `GOPATH`:
+
+    git clone https://github.com/skx/knownfs
+    cd knownfs
+    go install
 
 
 # Usage:
@@ -67,7 +81,7 @@ That gives me just hostnames:
 You can also specify the path to an alternative `known_hosts` file, with `-config /path/to/file`.
 
 
-## Github Setup
+# Github Setup
 
 This repository is configured to run tests upon every commit, and when
 pull-requests are created/updated.  The testing is carried out via
