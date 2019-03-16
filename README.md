@@ -3,6 +3,19 @@
 [![Release](https://img.shields.io/github/release/skx/knownfs.svg)](https://github.com/skx/knownfs/releases/latest)
 
 
+
+Table of Contents
+===============
+
+* [KnownFS](#knownfs)
+* [Installation](#installation)
+  * [Source Installation go &lt;=  1.11](#source-installation-go---111)
+  * [Source installation go  &gt;= 1.12](#source-installation-go---112)
+* [Usage:](#usage)
+* [Options](#options)
+* [Github Setup](#github-setup)
+
+
 # KnownFS
 
 A simple FUSE-based filesystem which exports the contents of `~/.ssh/known_hosts`.
