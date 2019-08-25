@@ -3,6 +3,7 @@
 # Install tools to test our code-quality.
 go get -u golang.org/x/lint/golint
 go get -u golang.org/x/tools/go/analysis/passes/shadow/cmd/shadow
+go get -u honnef.co/go/tools/cmd/staticcheck
 
 # Run the static-check tool
 t=$(mktemp)
