@@ -62,7 +62,7 @@ func (me *HostReader) Hosts() (map[string]string, error) {
 
 	// If not then we can return the entries - providing
 	// we've parsed at least once recently.
-	if changed == false && len(me.entries) > 0 {
+	if !changed && len(me.entries) > 0 {
 		return me.entries, nil
 	}
 
